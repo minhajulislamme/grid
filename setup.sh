@@ -37,6 +37,18 @@ if [ -f /etc/debian_version ]; then
     # Fix: Install autoconf and automake for patchelf/ta-lib build
     sudo apt-get install -y autoconf automake
 
+    # Setup swap to prevent OOM during builds on low-memory servers
+    mem_total_mb=$(free -m | awk '/^Mem:/{print $2}')
+    if [ "$mem_total_mb" -lt 2000 ] && [ ! -f /swapfile ]; then
+        echo "Low memory detected (${mem_total_mb}MB). Creating 2G swap file..."
+        sudo fallocate -l 2G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+        echo "Swap file created and activated."
+    fi
+
     # Download and install TA-Lib
     if [ ! -d "ta-lib" ]; then
         wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
@@ -68,6 +80,18 @@ elif [ -f /etc/redhat-release ]; then
     sudo yum install -y git
     # Fix: Install autoconf and automake for patchelf/ta-lib build
     sudo yum install -y autoconf automake
+
+    # Setup swap to prevent OOM during builds on low-memory servers
+    mem_total_mb=$(free -m | awk '/^Mem:/{print $2}')
+    if [ "$mem_total_mb" -lt 2000 ] && [ ! -f /swapfile ]; then
+        echo "Low memory detected (${mem_total_mb}MB). Creating 2G swap file..."
+        sudo fallocate -l 2G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+        echo "Swap file created and activated."
+    fi
 
     # Download and install TA-Lib
     if [ ! -d "ta-lib" ]; then
